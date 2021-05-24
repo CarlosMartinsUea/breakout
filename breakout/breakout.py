@@ -22,7 +22,7 @@ scoring_sound_effect = pygame.mixer.Sound('assets/arcade_bleep_sound.wav')
 game_loop = True
 game_clock = pygame.time.Clock()
 
-# sprites
+"""Sprites"""
 player = sprites.Player(WIDTH)
 ball = sprites.Ball(WIDTH, HEIGHT)
 
@@ -38,7 +38,7 @@ for i in range(10):
 
 while game_loop:
 
-    # draw
+    """Draw"""
     screen.fill(COLOR_BLACK)
     player.render(screen, COLOR_WHITE)
     ball.render(screen, COLOR_WHITE)
@@ -57,13 +57,13 @@ while game_loop:
             elif event.key == pygame.K_RIGHT:
                 player.right()
 
-    # ball collision player
+    """Ball's collision with player"""
     if ball.collision(player):
         ball.dx = 5
         ball.dy *= - 1
         bounce_sound_effect.play()
 
-    # collision and remove bricks
+    """Bricks' collision and removal"""
     dead_bricks = []
     for brick in bricks:
         if ball.collision(brick):
