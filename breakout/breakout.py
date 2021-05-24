@@ -1,4 +1,5 @@
 import pygame
+import sprites
 
 pygame.init()
 
@@ -6,56 +7,44 @@ pygame.init()
 COLOR_BLACK = (0, 0, 0)
 COLOR_WHITE = (255, 255, 255)
 
-"""Maximum Score Set"""
-SCORE_MAX = 2
-
 """Game Variables"""
-size = (1280, 720)
+WIDTH = 1280
+HEIGHT = 720
+size = (WIDTH, HEIGHT)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Breakout - PyGame Edition')
 
-"""Score text"""
-score_font = pygame.font.Font('assets/press_start_font.ttf', 44)
-score_text = score_font.render('00 x 00', True, COLOR_WHITE, COLOR_BLACK)
-score_text_rect = score_text.get_rect()
-score_text_rect.center = (680, 50)
-
-"""Victory text"""
-victory_font = pygame.font.Font('assets/press_start_font.ttf', 100)
-victory_text = victory_font .render('VICTORY', True, COLOR_WHITE, COLOR_BLACK)
-victory_text_rect = score_text.get_rect()
-victory_text_rect.center = (450, 350)
-
 """Sound effects"""
 bounce_sound_effect = pygame.mixer.Sound('assets/bounce.wav')
-scoring_sound_effect = pygame.mixer.Sound('arcade_bleep_sound.wav')
-
-"""Player 1 Controls and Assets"""
-player_1 = pygame.image.load('assets/player.png')
-player_1_y = 300
-player_1_move_up = False
-player_1_move_down = False
-
-"""CPU Controls and Assets"""
-player_2 = pygame.image.load('assets/player.png')
-player_2_y = 300
-
-"""Game's Ball"""
-ball = pygame.image.load('assets/ball.png')
-ball_x = 640
-ball_y = 360
-ball_dx = 5
-ball_dy = 5
-
-"""Game's score"""
-score_1 = 0
-score_2 = 0
+scoring_sound_effect = pygame.mixer.Sound('assets/arcade_bleep_sound.wav')
 
 """Game loop"""
 game_loop = True
 game_clock = pygame.time.Clock()
 
+# sprites
+player = sprites.Player(WIDTH)
+ball = sprites.Ball(WIDTH, HEIGHT)
+
+bricks = []
+x, y = 70, 20
+for i in range(10):
+    for j in range(20):
+        bricks.append(sprites.Brick(x, y))
+        x += 60
+
+    x = 70
+    y += 35
+
 while game_loop:
+
+    # draw
+    screen.fill(COLOR_BLACK)
+    player.render(screen, COLOR_WHITE)
+    ball.render(screen, COLOR_WHITE)
+
+    for i in range(len(bricks)):
+        bricks[i].render(screen)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -63,104 +52,38 @@ while game_loop:
 
         """Keystroke events"""
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                player_1_move_up = True
-            if event.key == pygame.K_DOWN:
-                player_1_move_down = True
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_UP:
-                player_1_move_up = False
-            if event.key == pygame.K_DOWN:
-                player_1_move_down = False
+            if event.key == pygame.K_LEFT:
+                player.left()
+            elif event.key == pygame.K_RIGHT:
+                player.right()
 
-    """Victory condition"""
-    if score_1 < SCORE_MAX and score_2 < SCORE_MAX:
+    # ball collision player
+    if ball.collision(player):
+        ball.dx = 5
+        ball.dy *= - 1
+        bounce_sound_effect.play()
 
-        """Clear screen"""
-        screen.fill(COLOR_BLACK)
-
-        """Ball collision with the wall"""
-        if ball_y > 700:
-            ball_dy *= -1
-            bounce_sound_effect.play()
-        elif ball_y <= 0:
-            ball_dy *= -1
+    # collision and remove bricks
+    dead_bricks = []
+    for brick in bricks:
+        if ball.collision(brick):
+            ball.dy *= - 1
+            dead_bricks.append(brick)
             bounce_sound_effect.play()
 
-        """Ball collision with the player 1's paddle"""
-        if ball_x < 100:
-            if player_1_y < ball_y + 25:
-                if player_1_y + 150 > ball_y:
-                    ball_dx *= -1
-                    bounce_sound_effect.play()
+    for brick in dead_bricks:
+        bricks.remove(brick)
 
-        """Ball collision with the CPU's paddle"""
-        if ball_x > 1160:
-            if player_2_y < ball_y + 25:
-                if player_2_y + 150 > ball_y:
-                    ball_dx *= -1
-                    bounce_sound_effect.play()
-
-        """Scoring points"""
-        if ball_x < -50:
-            ball_x = 640
-            ball_y = 360
-            ball_dy *= -1
-            ball_dx *= -1
-            score_2 += 1
-            scoring_sound_effect.play()
-        elif ball_x > 1320:
-            ball_x = 640
-            ball_y = 360
-            ball_dy *= -1
-            ball_dx *= -1
-            score_1 += 1
-            scoring_sound_effect.play()
-
-        """Ball movement"""
-        ball_x = ball_x + ball_dx
-        ball_y = ball_y + ball_dy
-
-        """Player 1 up movement"""
-        if player_1_move_up:
-            player_1_y -= 5
-        else:
-            player_1_y += 0
-
-        """Player 1 down movement"""
-        if player_1_move_down:
-            player_1_y += 5
-        else:
-            player_1_y += 0
-
-        """Player 1 collides with upper wall"""
-        if player_1_y <= 0:
-            player_1_y = 0
-
-        # Player 1 collides with lower wall
-        elif player_1_y >= 570:
-            player_1_y = 570
-
-        """CPU Artificial Intelligence"""
-        player_2_y = ball_y
-        if player_2_y <= 0:
-            player_2_y = 0
-        elif player_2_y >= 570:
-            player_2_y = 570
-
-        """Update score hud"""
-        score_text = score_font.render(str(score_1) + ' x ' + str(score_2), True, COLOR_WHITE, COLOR_BLACK)
-
-        """Drawing objects"""
-        screen.blit(ball, (ball_x, ball_y))
-        screen.blit(player_1, (50, player_1_y))
-        screen.blit(player_2, (1180, player_2_y))
-        screen.blit(score_text, score_text_rect)
-    else:
-        """Drawing victory"""
+    if len(bricks) <= 0:
         screen.fill(COLOR_BLACK)
-        screen.blit(score_text, score_text_rect)
-        screen.blit(victory_text, victory_text_rect)
+        font = pygame.font.Font('assets/press_start_font.ttf', 50)
+        text = font.render('YOU WIN!', True, COLOR_WHITE, COLOR_BLACK)
+        textRect = text.get_rect()
+        textRect.center = (WIDTH // 2, HEIGHT // 2)
+        screen.blit(text, textRect)
+
+    player.move(WIDTH)
+    ball.move(WIDTH, HEIGHT)
 
     """Update screen"""
     pygame.display.flip()
