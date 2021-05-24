@@ -59,7 +59,6 @@ while game_loop:
 
     """Ball's collision with player"""
     if ball.collision(player):
-        ball.dx = 5
         ball.dy *= - 1
         bounce_sound_effect.play()
 

@@ -43,7 +43,7 @@ class Ball:
     def __init__(self, screen_width, screen_height):
         self.x = screen_width / 2.0
         self.y = screen_height / 2.0
-        self.dx = 0
+        self.dx = 5
         self.dy = 5
         self.width = 20
         self.height = 20
